@@ -14,19 +14,19 @@ public class HtmlManip // Builds and Saves the HTML Structure of a Picture libra
     public HtmlManip(File mainFile) throws IOException  //Builds The main site!
     {
         this.mainFile = mainFile;
-        this.html = buildHTML("sample.html", this.mainFile, this.mainFile);
+        this.html = buildHTML("sample.html", this.mainFile, this.mainFile, "index.html");
     }
 
     public void start() throws IOException //Starts the recursive site building!
     {
-        buildContent(this.mainFile, this.mainFile, html);
+        buildContent(this.mainFile, this.mainFile, html, "index.html");
 
         System.out.println("--------------------------------------------");
         System.out.println("HTML Directory Tree Created Successfully!");
         System.out.println("--------------------------------------------");
     }
 
-    private String buildHTML(String htmlName, File filePath, File prevFile) throws FileNotFoundException //Scans the predefined HTML rules and loads them into the app
+    private String buildHTML(String htmlName, File filePath, File prevFile, String homesite) throws FileNotFoundException //Scans the predefined HTML rules and loads them into the app
     {
         File html = new File(htmlName);
 
@@ -42,19 +42,19 @@ public class HtmlManip // Builds and Saves the HTML Structure of a Picture libra
 
         String htmlDoc = sb.toString();
 
-        htmlDoc = htmlDoc.replace("...", this.mainFile.getAbsolutePath() + "\\index.html");
+        htmlDoc = htmlDoc.replace("...", homesite);
         
         if(prevFile.getName().equals(filePath.getName()))
             htmlDoc = htmlDoc.replace("\"prevdir\"", "");
         else
-            htmlDoc = htmlDoc.replace("\"prevdir\"", "<a href=\"" + prevFile.getAbsolutePath() + "\\index.html" + "\">" + "<<" + "</a>");
+            htmlDoc = htmlDoc.replace("\"prevdir\"", "<a href=\"" + "..\\index.html" + "\">" + "<<" + "</a>");
 
         sc.close();
 
         return htmlDoc;
     }
 
-    private void buildContent(File curFile, File prevFile, String curSite) throws IOException //Builds the Directory and Picture's HTML site recursively!
+    private void buildContent(File curFile, File prevFile, String curSite, String homesite) throws IOException //Builds the Directory and Picture's HTML site recursively!
     {
         StringBuffer pics = new StringBuffer();
         StringBuffer dirs = new StringBuffer();
@@ -63,9 +63,10 @@ public class HtmlManip // Builds and Saves the HTML Structure of a Picture libra
         {
             if(file.isDirectory())
             {
-                dirs.append("\t\t<li><a href=\"" + file.getAbsolutePath() + "\\index.html\">" + file.getName() + "</a></li>\n");
-                String dirHTML = buildHTML("sample.html", file, curFile);
-                buildContent(file, curFile, dirHTML);
+                dirs.append("\t\t<li><a href=\"" + file.getName() + "\\index.html\">" + file.getName() + "</a></li>\n");
+                homesite = "..\\" + homesite;
+                String dirHTML = buildHTML("sample.html", file, curFile, homesite);
+                buildContent(file, curFile, dirHTML, homesite);
             }
             else
             {
@@ -75,8 +76,8 @@ public class HtmlManip // Builds and Saves the HTML Structure of a Picture libra
                 for(String format : formats)
                     if(ext.equals(format))
                     {
-                        buildPicSite(file, curFile);
-                        pics.append("\t\t<li><a href=\"" + file.getAbsolutePath().substring(0, file.getAbsolutePath().lastIndexOf(".")) + ".html" + "\">" + file.getName() + "</a></li>\n");
+                        buildPicSite(file, curFile, homesite);
+                        pics.append("\t\t<li><a href=\"" + file.getName().substring(0, file.getName().lastIndexOf(".")) + ".html" + "\">" + file.getName() + "</a></li>\n");
                     }
             }
         }
@@ -126,22 +127,22 @@ public class HtmlManip // Builds and Saves the HTML Structure of a Picture libra
             if(nan)
                 return site.replace("\"prevpic\"", "#");
             else
-                return site.replace("\"prevpic\"", ls.get(indx - 1).getAbsolutePath().substring(0, ls.get(indx - 1).getAbsolutePath().lastIndexOf(".")) + ".html");
+                return site.replace("\"prevpic\"", ls.get(indx - 1).getName().substring(0, ls.get(indx - 1).getName().lastIndexOf(".")) + ".html");
         else
             if(nan)
                 return site.replace("\"nextpic\"", "#");
             else
-                return site.replace("\"nextpic\"", ls.get(indx + 1).getAbsolutePath().substring(0, ls.get(indx + 1).getAbsolutePath().lastIndexOf(".")) + ".html");
+                return site.replace("\"nextpic\"", ls.get(indx + 1).getName().substring(0, ls.get(indx + 1).getName().lastIndexOf(".")) + ".html");
 
     }
 
-    private void buildPicSite(File file, File prevFolder) throws IOException //Builds the Picture's HTML site
+    private void buildPicSite(File file, File prevFolder, String homesite) throws IOException //Builds the Picture's HTML site
     {
-        String site = buildHTML("picsample.html", file, prevFolder);
+        String site = buildHTML("picsample.html", file, prevFolder, homesite);
 
         site = site.replace("\"pictitle\"", file.getName());
-        site = site.replace("\"picpath\"", file.getAbsolutePath());
-        site = site.replace("\"backsite\"", prevFolder.getAbsolutePath() + "\\index.html");
+        site = site.replace("\"picpath\"", file.getName());
+        site = site.replace("\"backsite\"", "index.html");
 
         List<File> ls = getPicIndexes(prevFolder);
 
